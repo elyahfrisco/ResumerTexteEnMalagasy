@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resumer</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Resumer</h1>
+        <form id="textForm">
+            <div class="form-group">
+                <label for="textInput">Texte à résumer :</label>
+                <textarea class="form-control" id="textInput" rows="6" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Résumer</button>
+        </form>
+        <div class="mt-3" id="loading" style="display: none;">
+            <p><i class="fas fa-spinner fa-spin"></i> Chargement en cours...</p>
+        </div>
+        <div class="mt-3" id="summaryOutput"></div>
+        <div id="wordCountInitial" class="mt-3"></div>
+        <div id="wordCountFinal" class="mt-3"></div>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        document.getElementById('textForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const textInput = document.getElementById('textInput').value;
+
+            // Afficher l'indicateur de chargement
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const response = await fetch('http://localhost:3000/summarize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: textInput }),
+                });
+
+                const data = await response.json();
+
+                // Masquer l'indicateur de chargement
+                document.getElementById('loading').style.display = 'none';
+
+                // Afficher le résumé
+                document.getElementById('summaryOutput').innerHTML = `<h3>Résumé :</h3><p>${data.summary}</p>`;
+
+                // Calculer le nombre de mots final
+                const wordCountFinal = countWords(data.summary);
+                document.getElementById('wordCountFinal').innerText = `Nombre de mots Final : ${wordCountFinal}`;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('summaryOutput').innerHTML = '<p>Une erreur s\'est produite lors de la demande de résumé.</p>';
+            }
+        });
+
+        // Fonction pour compter le nombre de mots dans le texte
+        function countWords(text) {
+            return text.trim().split(/\s+/).length;
+        }
+
+        // Mettre à jour le nombre de mots initial lorsque le contenu du champ de texte change
+        document.getElementById('textInput').addEventListener('input', function() {
+            const textInput = this.value;
+            const wordCountInitial = countWords(textInput);
+            document.getElementById('wordCountInitial').innerText = `Nombre de mots Initial : ${wordCountInitial}`;
+        });
+    </script>
+</body>
+</html>
